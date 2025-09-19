@@ -16,7 +16,7 @@ class Chart extends Component {
     }
   }
 
-  _chartOptions(data){
+  _chartOptions(data, movingAvg20, movingAvg50, rsiData){
 
     const chartColor = this.props.chartColor;
 
@@ -24,7 +24,7 @@ class Chart extends Component {
       {
         credits: false,
         chart: {
-          height: '200px',
+          height: '300px',
           zoomType: 'x',
           backgroundColor: '#303032'
         },
@@ -45,20 +45,49 @@ class Chart extends Component {
             }
           }
         },
-        yAxis: {
+        yAxis: [{
           min: 0,
           gridLineColor: '#777',
           title: {
-            text: ''
+            text: 'Price',
+            style: {
+              color: '#777'
+            }
           },
           labels:{
             style: {
               color: '#777'
             }
           }
-        },
+        }, {
+          title: {
+            text: 'RSI',
+            style: {
+              color: '#ffd93d'
+            }
+          },
+          labels: {
+            style: {
+              color: '#ffd93d'
+            }
+          },
+          min: 0,
+          max: 100,
+          opposite: true,
+          gridLineWidth: 0
+        }],
         legend: {
-          enabled: false
+          enabled: true,
+          itemStyle: {
+            color: '#ccc'
+          }
+        },
+        tooltip: {
+          backgroundColor: '#2d2d2d',
+          borderColor: '#555',
+          style: {
+            color: '#fff'
+          }
         },
         plotOptions: {
           area: {
@@ -85,12 +114,37 @@ class Chart extends Component {
               }
             },
             threshold: null
+          },
+          line: {
+            marker: {
+              enabled: false
+            },
+            lineWidth: 1
           }
         },
         series: [{
           type: 'area',
-          name: this.props.ticker + '/' + "$", // @TODO get correct symbol
-          data: data
+          name: this.props.ticker.toUpperCase() + ' Price',
+          data: data,
+          yAxis: 0
+        }, {
+          type: 'line',
+          name: 'MA20',
+          data: movingAvg20,
+          color: '#ff9500',
+          yAxis: 0
+        }, {
+          type: 'line',
+          name: 'MA50',
+          data: movingAvg50,
+          color: '#0ea5e9',
+          yAxis: 0
+        }, {
+          type: 'line',
+          name: 'RSI',
+          data: rsiData,
+          color: '#ffd93d',
+          yAxis: 1
         }]
       }
     )
@@ -99,6 +153,47 @@ class Chart extends Component {
   //Destroy chart before unmount.
   componentWillUnmount () {
     this.chart && this.chart.destroy();
+  }
+
+  calculateMovingAverage(data, period) {
+    return data.map((point, index) => {
+      if (index < period - 1) return [point[0], null];
+      
+      const sum = data.slice(index - period + 1, index + 1)
+        .reduce((acc, curr) => acc + curr[1], 0);
+      const average = sum / period;
+      
+      return [point[0], average];
+    }).filter(point => point[1] !== null);
+  }
+
+  calculateRSI(data, period = 14) {
+    if (data.length < period + 1) return [];
+    
+    const changes = [];
+    for (let i = 1; i < data.length; i++) {
+      changes.push(data[i][1] - data[i - 1][1]);
+    }
+    
+    const rsiData = [];
+    for (let i = period; i < changes.length; i++) {
+      const recentChanges = changes.slice(i - period, i);
+      const gains = recentChanges.filter(change => change > 0);
+      const losses = recentChanges.filter(change => change < 0).map(loss => Math.abs(loss));
+      
+      const avgGain = gains.length > 0 ? gains.reduce((a, b) => a + b, 0) / period : 0;
+      const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / period : 0;
+      
+      if (avgLoss === 0) {
+        rsiData.push([data[i + 1][0], 100]);
+      } else {
+        const rs = avgGain / avgLoss;
+        const rsi = 100 - (100 / (1 + rs));
+        rsiData.push([data[i + 1][0], rsi]);
+      }
+    }
+    
+    return rsiData;
   }
 
   _fetchChartData (coin, exchangeRate) {
@@ -123,6 +218,12 @@ class Chart extends Component {
             var closingPrice = day.close * exchangeRate;
             return [fixDate, closingPrice];
           })
+          
+          // Calculate technical indicators
+          const movingAvg20 = this.calculateMovingAverage(highcharts_data, 20);
+          const movingAvg50 = this.calculateMovingAverage(highcharts_data, 50);
+          const rsiData = this.calculateRSI(highcharts_data);
+          
           const nextState = {
             ticker: ticker,
             chart: res,
@@ -131,7 +232,7 @@ class Chart extends Component {
           // set chart options to render
           this.chart = new Highcharts["Chart"](
             "chart_container",
-            this._chartOptions(highcharts_data)
+            this._chartOptions(highcharts_data, movingAvg20, movingAvg50, rsiData)
           );
           this.setState(nextState);
         } else {

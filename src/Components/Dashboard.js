@@ -205,8 +205,8 @@ const Dashboard = ({ totalPortfolio, marketData, coinz, currency, exchangeRate }
           <WelcomeSubtitle>Here's your portfolio overview for today</WelcomeSubtitle>
         </WelcomeSection>
         <QuickActions>
-          <ActionButton>Add Coin</ActionButton>
-          <ActionButton primary>Export Data</ActionButton>
+          <ActionButton onClick={() => window.location.href = '/menu'}>Add Coin</ActionButton>
+          <ActionButton primary onClick={() => window.location.href = '/analytics'}>Analytics</ActionButton>
         </QuickActions>
       </Header>
 

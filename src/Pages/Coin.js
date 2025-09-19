@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import {Link} from 'react-router-dom';
 import Chart from "../Components/Chart";
+import PriceAlert from "../Components/PriceAlert";
 import { $numberWithCommas, $currencySymbol, returnMultiple } from '../Utils/Helpers';
 import {translationStrings} from '../Utils/i18n';
 
@@ -150,6 +151,16 @@ class Coin extends Component {
             </span>
           </div>
 
+        </div>
+
+        {/* Price Alerts Section */}
+        <div style={{ padding: '20px' }}>
+          <PriceAlert
+            coin={coin}
+            marketData={this.props.marketData}
+            exchangeRate={this.props.exchangeRate}
+            currency={this.props.currency}
+          />
         </div>
       </div>
     );
