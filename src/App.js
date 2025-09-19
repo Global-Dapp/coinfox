@@ -14,10 +14,13 @@ import Coin from './Pages/Coin';
 import Pie from './Pages/Pie';
 import Menu from './Pages/Menu';
 import SupportedCoins from './Pages/SupportedCoins';
+import Analytics from './Pages/Analytics';
 
 import './App.css';
 import Blockstack from "./Components/Blockstack";
 import NotificationSystem from "./Components/Notifications";
+import AlertNotification from "./Components/AlertNotification";
+import { checkAlertTriggers } from './Utils/alertHelpers';
 
 import { translationStrings } from './Utils/i18n';
 const string = translationStrings();
@@ -75,7 +78,10 @@ class App extends Component {
       blockstack: isUserSignedIn(), //returns true if user is logged in
       gaiaStorage: 'coinfox.json',
       supportedCurrencies: supportedCurrencies,
+      triggeredAlerts: []
     }
+    
+    this.alertNotificationRef = React.createRef();
   }
 
   addExistingCoin(storage, key, payload) {
@@ -325,9 +331,27 @@ class App extends Component {
         }
       });
       this.setState({ marketData });
+      
+      // Check for triggered alerts after market data update
+      this.checkAndTriggerAlerts(marketData);
     } catch (e) {
       console.warn('marketData error', e);
       this.setState({ marketData: {} });
+    }
+  }
+
+  checkAndTriggerAlerts = async (marketData) => {
+    try {
+      const exchangeRate = this.state.exchangeRates[this.state.pref.currency] || 1;
+      const triggeredAlerts = await checkAlertTriggers(marketData, exchangeRate);
+      
+      if (triggeredAlerts.length > 0 && this.alertNotificationRef.current) {
+        triggeredAlerts.forEach(alert => {
+          this.alertNotificationRef.current.showAlertNotification(alert, alert.currentPrice);
+        });
+      }
+    } catch (error) {
+      console.error('Failed to check alerts:', error);
     }
   }
 
@@ -418,6 +442,13 @@ class App extends Component {
     if (!window.location.origin.includes('localhost')) {
       this.redirectToHttps()
     }
+
+    // Set up real-time price monitoring (every 5 minutes)
+    this.priceMonitoringInterval = setInterval(() => {
+      if (this.state.coinz && Object.keys(this.state.coinz).length > 0) {
+        this.marketData(this.state.coinz);
+      }
+    }, 5 * 60 * 1000); // 5 minutes
 
 
     // check for portfolio import string
@@ -565,6 +596,13 @@ class App extends Component {
     }
   }
 
+  componentWillUnmount() {
+    // Clean up intervals
+    if (this.priceMonitoringInterval) {
+      clearInterval(this.priceMonitoringInterval);
+    }
+  }
+
   render() {
     const exchangeRate = this.state.exchangeRates[this.state.pref.currency]
       ? this.state.exchangeRates[this.state.pref.currency]
@@ -576,6 +614,10 @@ class App extends Component {
       <BrowserRouter>
         <div>
           <NotificationSystem />
+          <AlertNotification 
+            ref={this.alertNotificationRef}
+            currency={this.state.pref && this.state.pref.currency || "USD"}
+          />
           <Switch>
             <Route exact path="/"
               render={
@@ -649,6 +691,19 @@ class App extends Component {
             />
 
             <Route path="/supportedcoins" component={SupportedCoins} />
+
+            <Route path="/analytics"
+              render={
+                (props) => <Analytics {...props}
+                  coinz={this.state.coinz}
+                  marketData={this.state.marketData}
+                  exchangeRate={exchangeRate}
+                  totalPortfolio={totalPortfolio}
+                  currency={this.state.pref && this.state.pref.currency || "USD"}
+                  language={this.state.pref && this.state.pref.language || "EN"}
+                />
+              }
+            />
 
           </Switch>
         </div>

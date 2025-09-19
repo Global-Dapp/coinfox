@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom'
 import { isUserSignedIn } from 'blockstack';
+import styled from 'styled-components';
 
 import Pie from './Pie';
 import TotalPortfolio from '../Components/TotalPortfolio';
@@ -10,6 +11,36 @@ import CoinList from '../Components/CoinList';
 import CurrencyPref from '../Components/CurrencyPref';
 import AddCoin from '../Components/AddCoin';
 import {translationStrings} from '../Utils/i18n';
+
+const FloatingActionButton = styled(Link)`
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #21ce99, #00d4aa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(33, 206, 153, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(33, 206, 153, 0.4);
+    text-decoration: none;
+    color: white;
+  }
+  
+  @media (max-width: 768px) {
+    bottom: 80px;
+  }
+`;
 
 
 class Home extends Component {
@@ -102,6 +133,10 @@ class Home extends Component {
             activeFilter={this.state.activeFilter}
             sortBy={this.state.sortBy}
             key={"CoinList"}/>}
+          
+          <FloatingActionButton to="/analytics" title="Advanced Analytics">
+            📊
+          </FloatingActionButton>
         </div>
       );
     } else { // if (!isUserSignedIn()) {
