@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
-import { $numberWithCommas, $currencySymbol } from '../Utils/Helpers';
-import { translationStrings } from '../Utils/i18n';
-import QuickActions from './QuickActions';
-import styled from 'styled-components';
-import { showNotification } from './Notifications';
+import React, { Component } from "react";
+import { withRouter } from "react-router-dom";
+import { $numberWithCommas, $currencySymbol } from "../Utils/Helpers";
+import { translationStrings } from "../Utils/i18n";
+import QuickActions from "./QuickActions";
+import styled from "styled-components";
+import { showNotification } from "./Notifications";
 
 const CoinListContainer = styled.div`
   padding: 0 20px;
@@ -20,7 +20,8 @@ const CoinItem = styled.div`
   justify-content: space-between;
   transition: all 0.2s ease;
   border: 1px solid transparent;
-  
+  cursor: pointer;
+
   &:hover {
     border-color: #21ce99;
     transform: translateY(-2px);
@@ -90,7 +91,7 @@ const Performance = styled.div`
 const PerformanceValue = styled.div`
   font-size: 16px;
   font-weight: 600;
-  color: ${props => props.isPositive ? '#21ce99' : '#ff6b6b'};
+  color: ${(props) => (props.isPositive ? "#21ce99" : "#ff6b6b")};
   margin-bottom: 4px;
 `;
 
@@ -102,16 +103,16 @@ const PerformanceLabel = styled.div`
 const FavoriteButton = styled.button`
   background: none;
   border: none;
-  color: ${props => props.isFavorite ? '#ffd700' : '#555'};
+  color: ${(props) => (props.isFavorite ? "#ffd700" : "#555")};
   cursor: pointer;
   font-size: 18px;
   padding: 8px;
   border-radius: 4px;
   transition: all 0.2s ease;
   margin-right: 8px;
-  
+
   &:hover {
-    color: ${props => props.isFavorite ? '#ffed4e' : '#777'};
+    color: ${(props) => (props.isFavorite ? "#ffed4e" : "#777")};
     background: #404042;
   }
 `;
@@ -122,7 +123,7 @@ class CoinList extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      favorites: JSON.parse(localStorage.getItem('coinFavorites') || '[]')
+      favorites: JSON.parse(localStorage.getItem("coinFavorites") || "[]"),
     };
   }
 
@@ -130,35 +131,39 @@ class CoinList extends Component {
     const { favorites } = this.state;
     const isCurrentlyFavorite = favorites.includes(coin);
     const newFavorites = isCurrentlyFavorite
-      ? favorites.filter(f => f !== coin)
+      ? favorites.filter((f) => f !== coin)
       : [...favorites, coin];
-    
+
     this.setState({ favorites: newFavorites });
-    localStorage.setItem('coinFavorites', JSON.stringify(newFavorites));
-    
+    localStorage.setItem("coinFavorites", JSON.stringify(newFavorites));
+
     // Show notification
     if (isCurrentlyFavorite) {
-      showNotification('info', `${coin.toUpperCase()} removed from favorites`);
+      showNotification("info", `${coin.toUpperCase()} removed from favorites`);
     } else {
-      showNotification('success', `${coin.toUpperCase()} added to favorites`);
+      showNotification("success", `${coin.toUpperCase()} added to favorites`);
     }
   };
 
   handleEdit = (coin) => {
     // Navigate to edit page or open edit modal
-    console.log('Edit coin:', coin);
+    console.log("Edit coin:", coin);
   };
 
   handleRemove = (coin) => {
     if (window.confirm(`Remove ${coin.toUpperCase()} from your portfolio?`)) {
       // Call remove function from parent
-      console.log('Remove coin:', coin);
+      console.log("Remove coin:", coin);
     }
   };
 
   handleViewDetails = (coin) => {
-    // Navigate to coin details page
-    window.location.href = `/coin/${coin}`;
+    // Navigate to coin details page using react-router
+    if (this.props.history && this.props.history.push) {
+      this.props.history.push(`/coin/${coin}`);
+    } else {
+      window.location.href = `/coin/${coin}`;
+    }
   };
 
   render() {
@@ -166,44 +171,57 @@ class CoinList extends Component {
     const marketData = this.props.marketData ? this.props.marketData : false;
     const curSymbol = $currencySymbol(this.props.currency);
     const { searchTerm, activeFilter, sortBy } = this.props;
-    
+
     if (!coinz || !marketData) {
       return <div>Loading...</div>;
     }
 
     let filteredCoins = Object.keys(coinz);
-    
+
     // Apply search filter
     if (searchTerm) {
-      filteredCoins = filteredCoins.filter(coin => 
+      filteredCoins = filteredCoins.filter((coin) =>
         coin.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     // Apply active filter
-    if (activeFilter === 'favorites') {
-      filteredCoins = filteredCoins.filter(coin => 
+    if (activeFilter === "favorites") {
+      filteredCoins = filteredCoins.filter((coin) =>
         this.state.favorites.includes(coin)
       );
-    } else if (activeFilter === 'gaining') {
-      filteredCoins = filteredCoins.filter(coin => {
-        const price = (marketData[coin] && marketData[coin].ticker && marketData[coin].ticker.price) || 0;
+    } else if (activeFilter === "gaining") {
+      filteredCoins = filteredCoins.filter((coin) => {
+        const price =
+          (marketData[coin] &&
+            marketData[coin].ticker &&
+            marketData[coin].ticker.price) ||
+          0;
         const costBasis = coinz[coin].cost_basis * this.props.exchangeRate;
         return price >= costBasis;
       });
-    } else if (activeFilter === 'losing') {
-      filteredCoins = filteredCoins.filter(coin => {
-        const price = (marketData[coin] && marketData[coin].ticker && marketData[coin].ticker.price) || 0;
+    } else if (activeFilter === "losing") {
+      filteredCoins = filteredCoins.filter((coin) => {
+        const price =
+          (marketData[coin] &&
+            marketData[coin].ticker &&
+            marketData[coin].ticker.price) ||
+          0;
         const costBasis = coinz[coin].cost_basis * this.props.exchangeRate;
         return price < costBasis;
       });
     }
 
     const coinzWithPrice = filteredCoins.map((coin, i) => {
-      const coinPrice = (marketData[coin] && marketData[coin].ticker && marketData[coin].ticker.price) || 0;
-      const price = marketData[coin] && marketData[coin].ticker
-        ? Number(coinPrice * this.props.exchangeRate)
-        : 0;
+      const coinPrice =
+        (marketData[coin] &&
+          marketData[coin].ticker &&
+          marketData[coin].ticker.price) ||
+        0;
+      const price =
+        marketData[coin] && marketData[coin].ticker
+          ? Number(coinPrice * this.props.exchangeRate)
+          : 0;
 
       const coinRound = Math.round(coinz[coin].hodl * 100) / 100;
       const hodlValue = price * coinz[coin].hodl;
@@ -218,22 +236,22 @@ class CoinList extends Component {
         hodlValue,
         performance,
         isPositive,
-        costBasis
+        costBasis,
       };
     });
 
     // Apply sorting
     switch (sortBy) {
-      case 'name':
+      case "name":
         coinzWithPrice.sort((a, b) => a.coin.localeCompare(b.coin));
         break;
-      case 'performance':
+      case "performance":
         coinzWithPrice.sort((a, b) => b.performance - a.performance);
         break;
-      case 'quantity':
+      case "quantity":
         coinzWithPrice.sort((a, b) => b.coinRound - a.coinRound);
         break;
-      case 'value':
+      case "value":
       default:
         coinzWithPrice.sort((a, b) => b.hodlValue - a.hodlValue);
         break;
@@ -242,8 +260,11 @@ class CoinList extends Component {
     if (coinzWithPrice.length === 0) {
       return (
         <CoinListContainer>
-          <div style={{ textAlign: 'center', padding: '40px', color: '#aaa' }}>
-            <i className="fa fa-search" style={{ fontSize: '48px', marginBottom: '16px' }}></i>
+          <div style={{ textAlign: "center", padding: "40px", color: "#aaa" }}>
+            <i
+              className="fa fa-search"
+              style={{ fontSize: "48px", marginBottom: "16px" }}
+            ></i>
             <h3>No coins found</h3>
             <p>Try adjusting your search or filter criteria</p>
           </div>
@@ -255,38 +276,56 @@ class CoinList extends Component {
       <CoinListContainer>
         {coinzWithPrice.map((coinData, i) => {
           const isFavorite = this.state.favorites.includes(coinData.coin);
-          
+
           return (
-            <CoinItem key={i}>
+            <CoinItem
+              key={i}
+              onClick={() => this.handleViewDetails(coinData.coin)}
+            >
               <CoinInfo>
-                <CoinIcon>
-                  {coinData.coin.toUpperCase().charAt(0)}
-                </CoinIcon>
-                
+                <CoinIcon>{coinData.coin.toUpperCase().charAt(0)}</CoinIcon>
+
                 <CoinDetails>
                   <CoinName>{coinData.coin.toUpperCase()}</CoinName>
-                  <CoinQuantity>{coinData.coinRound} {string.coins}</CoinQuantity>
+                  <CoinQuantity>
+                    {coinData.coinRound} {string.coins}
+                  </CoinQuantity>
                 </CoinDetails>
               </CoinInfo>
 
               <Performance>
                 <PerformanceValue isPositive={coinData.isPositive}>
-                  {coinData.isPositive ? '+' : ''}{coinData.performance.toFixed(2)}%
+                  {coinData.isPositive ? "+" : ""}
+                  {coinData.performance.toFixed(2)}%
                 </PerformanceValue>
                 <PerformanceLabel>Performance</PerformanceLabel>
               </Performance>
 
               <CoinValue>
-                <TotalValue>{curSymbol}{$numberWithCommas(coinData.hodlValue.toFixed(2))}</TotalValue>
-                <CurrentPrice>{curSymbol}{$numberWithCommas(coinData.price.toFixed(2))}</CurrentPrice>
+                <TotalValue>
+                  {curSymbol}
+                  {$numberWithCommas(coinData.hodlValue.toFixed(2))}
+                </TotalValue>
+                <CurrentPrice>
+                  {curSymbol}
+                  {$numberWithCommas(coinData.price.toFixed(2))}
+                </CurrentPrice>
               </CoinValue>
 
               <FavoriteButton
                 isFavorite={isFavorite}
-                onClick={() => this.toggleFavorite(coinData.coin)}
-                title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  this.toggleFavorite(coinData.coin);
+                }}
+                title={
+                  isFavorite ? "Remove from favorites" : "Add to favorites"
+                }
               >
-                <i className={`fa fa-${isFavorite ? 'heart' : 'heart-o'}`} aria-hidden="true"></i>
+                <i
+                  className={`fa fa-${isFavorite ? "heart" : "heart-o"}`}
+                  aria-hidden="true"
+                ></i>
               </FavoriteButton>
 
               <QuickActions
@@ -305,4 +344,4 @@ class CoinList extends Component {
   }
 }
 
-export default CoinList;
+export default withRouter(CoinList);

@@ -1,13 +1,13 @@
-import React, { Component } from 'react';
-import {Link} from 'react-router-dom';
-import {translationStrings} from '../Utils/i18n';
+import React, { Component } from "react";
+import { Link } from "react-router-dom";
+import { translationStrings } from "../Utils/i18n";
 import fetch from "fetch-retry";
-import styled from 'styled-components';
-import VirtualizedSelect from 'react-virtualized-select'
-import 'react-select/dist/react-select.css';
-import 'react-virtualized/styles.css'
-import 'react-virtualized-select/styles.css'
-import { showNotification } from './Notifications';
+import styled from "styled-components";
+import VirtualizedSelect from "react-virtualized-select";
+import "react-select/dist/react-select.css";
+import "react-virtualized/styles.css";
+import "react-virtualized-select/styles.css";
+import { showNotification } from "./Notifications";
 
 const Title = styled.h3`
   color: white;
@@ -35,10 +35,11 @@ const Input = styled.input`
   padding: 0px 10px;
   height: 36px;
   box-sizing: border-box;
-  ::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+  ::placeholder {
+    /* Chrome, Firefox, Opera, Safari 10.1+ */
     color: #aaa;
     opacity: 1; /* Firefox */
-}
+  }
 `;
 const SubmitButton = styled.button`
   width: 100%;
@@ -54,7 +55,7 @@ const SubmitButton = styled.button`
   box-sizing: border-box;
   cursor: pointer;
   ::after {
-    content: '';
+    content: "";
     position: absolute;
     z-index: -1;
     top: 0px;
@@ -77,8 +78,8 @@ class AddCoin extends Component {
       selected_ticker: "",
       avg_cost_basis: "",
       hodl: "",
-      supported: []
-    }
+      supported: [],
+    };
   }
   addCoin = (e) => {
     e.preventDefault();
@@ -96,58 +97,59 @@ class AddCoin extends Component {
     this.setState({
       ticker: "",
       avg_cost_basis: "",
-      hodl: ""
+      hodl: "",
     });
-    
+
     // Show success notification
-    showNotification('success', `${payload.ticker.toUpperCase()} added to your portfolio!`);
-  }
+    showNotification(
+      "success",
+      `${payload.ticker.toUpperCase()} added to your portfolio!`
+    );
+  };
 
   onChange = (item, e) => {
     var text = e.target.value;
-    this.setState({[item]: text});
-  }
+    this.setState({ [item]: text });
+  };
 
-  componentWillMount () {
+  componentWillMount() {
     fetch("https://api.coingecko.com/api/v3/coins/list")
-      .then(res => {
+      .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then(coins => {
+      .then((coins) => {
         if (this.refs.addRef) {
           this.setState({
-            options: coins.map(c => ({
-              "code": c.symbol,
-              "name": c.name,
-              "statuses": ["primary"]
-            }))
-          })
+            options: coins.map((c) => ({
+              code: c.symbol,
+              name: c.name,
+              statuses: ["primary"],
+            })),
+          });
         }
       })
       .catch((e) => {
-        console.warn('Failed to load coins list', e);
+        console.warn("Failed to load coins list", e);
         if (this.refs.addRef) {
           this.setState({ options: [] });
         }
-      })
+      });
   }
   handleTickerChange = (selected_ticker) => {
     this.setState({ selected_ticker });
-  }
+  };
   render() {
-    
     const { selected_ticker, options } = this.state;
     const string = translationStrings(this.props.language);
 
     // const avgCostBasis = "Average Cost Basis ("+ $currencySymbol(this.state.preferences.currency) +"/per coin)"
     const avgCostBasis = string.avgcost;
     return (
-      <AddCoinWrapper ref="addRef" >
+      <AddCoinWrapper ref="addRef">
         <Title>{string.addcoin}</Title>
         <Form className="" onSubmit={this.addCoin}>
-
-          <TickerSelector 
+          <TickerSelector
             name="form-select-ticker"
             placeholder={string.ticker}
             value={selected_ticker}
@@ -155,19 +157,27 @@ class AddCoin extends Component {
             onChange={this.handleTickerChange}
             options={options}
           />
-          <br/>
-          <Input type="number"
-            autoComplete='off' spellCheck='false' autoCorrect='off'
+          <br />
+          <Input
+            type="number"
+            autoComplete="off"
+            spellCheck="false"
+            autoCorrect="off"
             onChange={(e) => this.onChange("avg_cost_basis", e)}
             value={this.state.avg_cost_basis}
-            placeholder={avgCostBasis}/>
-          <br/>
-          <Input type="number"
-            autoComplete='off' spellCheck='false' autoCorrect='off'
+            placeholder={avgCostBasis}
+          />
+          <br />
+          <Input
+            type="number"
+            autoComplete="off"
+            spellCheck="false"
+            autoCorrect="off"
             onChange={(e) => this.onChange("hodl", e)}
             value={this.state.hodl}
-            placeholder={string.numberheld}/>
-          <br/>
+            placeholder={string.numberheld}
+          />
+          <br />
           <SubmitButton type="submit">{string.go}</SubmitButton>
         </Form>
       </AddCoinWrapper>
