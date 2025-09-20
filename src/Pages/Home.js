@@ -6,6 +6,7 @@ import Pie from "./Pie";
 import TotalPortfolio from "../Components/TotalPortfolio";
 import PortfolioSummary from "../Components/PortfolioSummary";
 import AlertNotification from "../Components/AlertNotification";
+import AlertsList from "../Components/AlertsList";
 import SearchFilter from "../Components/SearchFilter";
 import CoinList from "../Components/CoinList";
 import CurrencyPref from "../Components/CurrencyPref";
@@ -117,6 +118,9 @@ class Home extends Component {
               key={"CoinList"}
             />
           )}
+
+          {/* Alerts section - shows configured alerts for all coins */}
+          <AlertsList currency={this.props.currency} />
         </div>
       );
     } else {

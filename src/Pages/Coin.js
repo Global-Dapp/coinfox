@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import Chart from "../Components/Chart";
 import PriceAlert from "../Components/PriceAlert";
+import AlertNotification from "../Components/AlertNotification";
 import {
   $numberWithCommas,
   $currencySymbol,
@@ -113,6 +114,7 @@ class Coin extends Component {
               chartColor={chartColor}
               exchangeRate={this.props.exchangeRate}
               ticker={coin}
+              currency={this.props.currency}
             />
           </div>
 
@@ -196,27 +198,10 @@ class Coin extends Component {
               </span>
             </span>
           </div>
-          {/* spacer so fixed footer doesn't overlap content */}
-          <div style={{ height: "160px" }}></div>
-        </div>
-        {/* fixed footer with price alerts */}
-        <div
-          style={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 1000,
-            padding: "10px 12px",
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(6px)",
-          }}
-        >
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ maxHeight: "40vh", overflowY: "auto" }}>
-              <PriceAlert coin={coin} currency={this.props.currency} />
-            </div>
-          </div>
+          {/* Price alerts (now inline and scrollable) */}
+          <PriceAlert coin={coin} currency={this.props.currency} />
+          {/* Current set alerts (active/triggered) */}
+          <AlertNotification coin={coin} />
         </div>
       </div>
     );
