@@ -1,30 +1,28 @@
-import React, { Component } from 'react';
-import { Link } from 'react-router-dom'
-import { isUserSignedIn } from 'blockstack';
+import React, { Component } from "react";
+import { Link } from "react-router-dom";
 
-import Pie from './Pie';
-import TotalPortfolio from '../Components/TotalPortfolio';
-import PortfolioSummary from '../Components/PortfolioSummary';
-import SearchFilter from '../Components/SearchFilter';
-import CoinList from '../Components/CoinList';
-import CurrencyPref from '../Components/CurrencyPref';
-import AddCoin from '../Components/AddCoin';
-import {translationStrings} from '../Utils/i18n';
-
+import Pie from "./Pie";
+import TotalPortfolio from "../Components/TotalPortfolio";
+import PortfolioSummary from "../Components/PortfolioSummary";
+import AlertsList from "../Components/AlertsList";
+import SearchFilter from "../Components/SearchFilter";
+import CoinList from "../Components/CoinList";
+import CurrencyPref from "../Components/CurrencyPref";
+import AddCoin from "../Components/AddCoin";
+import { translationStrings } from "../Utils/i18n";
 
 class Home extends Component {
-
-  constructor () {
-    super()
+  constructor() {
+    super();
     this.state = {
       listView: true,
-      searchTerm: '',
-      activeFilter: 'all',
-      sortBy: 'value'
-    }
+      searchTerm: "",
+      activeFilter: "all",
+      sortBy: "value",
+    };
   }
 
-  componentDidMount () {
+  componentDidMount() {
     // if (window.location.search.indexOf("blockstring")) {
     //   console.log('adjusting redirect in HOMEx');
     //   var redirectPath = localStorage.getItem("blockstring");
@@ -35,28 +33,29 @@ class Home extends Component {
   }
 
   toggleView = () => {
-    this.setState({listView: !this.state.listView});
-  }
+    this.setState({ listView: !this.state.listView });
+  };
 
   handleSearch = (searchTerm) => {
     this.setState({ searchTerm });
-  }
+  };
 
   handleFilter = (filter) => {
     this.setState({ activeFilter: filter });
-  }
+  };
 
   handleSort = (sortBy) => {
     this.setState({ sortBy });
-  }
+  };
   render() {
-    const coinz = Object.keys(this.props.coinz).length > 0 ? this.props.coinz : false;
+    const coinz =
+      Object.keys(this.props.coinz).length > 0 ? this.props.coinz : false;
     const string = translationStrings(this.props.language);
     if (coinz) {
       return (
         <div className="Home">
-          <div className="header" style={{ position: 'relative' }}>
-            <Link className="menu" key='Menu' to='/menu'>
+          <div className="header" style={{ position: "relative" }}>
+            <Link className="menu" key="Menu" to="/menu">
               <i className="btn-menu fa fa-lg fa-bars" aria-hidden="true"></i>
             </Link>
             <TotalPortfolio
@@ -65,9 +64,10 @@ class Home extends Component {
               exchangeRate={this.props.exchangeRate}
               marketData={this.props.marketData}
               coinz={this.props.coinz}
-              key={"TotalPortfolio"}/>
+              key={"TotalPortfolio"}
+            />
           </div>
-          
+
           <PortfolioSummary
             totalPortfolio={this.props.totalPortfolio}
             marketData={this.props.marketData}
@@ -75,7 +75,33 @@ class Home extends Component {
             currency={this.props.currency}
             exchangeRate={this.props.exchangeRate}
           />
-          
+
+          <div
+            className="analyticsLink"
+            style={{
+              padding: "10px 20px",
+              textAlign: "center",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            <Link
+              to="/analytics"
+              style={{
+                color: "#21ce99",
+                textDecoration: "none",
+                fontSize: "16px",
+                fontWeight: "600",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+              }}
+            >
+              <i className="fa fa-chart-line" aria-hidden="true"></i>
+              View Portfolio Analytics
+            </Link>
+          </div>
+
           <SearchFilter
             onSearch={this.handleSearch}
             onFilter={this.handleFilter}
@@ -85,32 +111,50 @@ class Home extends Component {
             sortBy={this.state.sortBy}
           />
           <div className="toggleView">
-            <i onClick={this.toggleView} className={this.state.listView ? "fa fa-lg fa-pie-chart" : "fa fa-lg fa-th-list"} aria-hidden="true"></i>
+            <i
+              onClick={this.toggleView}
+              className={
+                this.state.listView
+                  ? "fa fa-lg fa-pie-chart"
+                  : "fa fa-lg fa-th-list"
+              }
+              aria-hidden="true"
+            ></i>
           </div>
-          {!this.state.listView && <Pie
+          {!this.state.listView && (
+            <Pie
               coinz={this.props.coinz}
               marketData={this.props.marketData}
               exchangeRate={this.props.exchangeRate}
               totalPortfolio={this.props.totalPortfolio}
-          />}
-          {this.state.listView && <CoinList
-            currency={this.props.currency}
-            exchangeRate={this.props.exchangeRate}
-            marketData={this.props.marketData}
-            coinz={this.props.coinz}
-            searchTerm={this.state.searchTerm}
-            activeFilter={this.state.activeFilter}
-            sortBy={this.state.sortBy}
-            key={"CoinList"}/>}
+            />
+          )}
+          {this.state.listView && (
+            <CoinList
+              currency={this.props.currency}
+              exchangeRate={this.props.exchangeRate}
+              marketData={this.props.marketData}
+              coinz={this.props.coinz}
+              searchTerm={this.state.searchTerm}
+              activeFilter={this.state.activeFilter}
+              sortBy={this.state.sortBy}
+              deleteCoin={this.props.deleteCoin}
+              key={"CoinList"}
+            />
+          )}
+
+          {/* Alerts section - shows configured alerts for all coins */}
+          <AlertsList currency={this.props.currency} />
         </div>
       );
-    } else { // if (!isUserSignedIn()) {
+    } else {
+      // if (!isUserSignedIn()) {
       console.log("!isUserSignedIn()");
       // NEW User Welcome screen
       return (
         <div className="Home">
           <div className="header">
-            <Link className="menu" key='Menu' to='/menu'>
+            <Link className="menu" key="Menu" to="/menu">
               <i className="btn-menu fa fa-lg fa-bars" aria-hidden="true"></i>
             </Link>
             <h1 className="center">{string.welcome}</h1>
@@ -121,19 +165,18 @@ class Home extends Component {
               supportedCurrencies={this.props.supportedCurrencies}
               saveNewPref={this.props.saveNewPref}
               language={this.props.language}
-              currency={this.props.currency} 
+              currency={this.props.currency}
             />
-            <AddCoin 
+            <AddCoin
               addCoinz={this.props.addCoinz}
               language={this.props.language}
-              key='AddCoin'
+              key="AddCoin"
             />
           </div>
-
         </div>
       );
     } //else {
-      //return null // @TODO add loading screen
+    //return null // @TODO add loading screen
     //}
   }
 }

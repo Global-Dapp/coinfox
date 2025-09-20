@@ -1,25 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import styled from "styled-components";
 import Highcharts from "highcharts";
-import { $currencySymbol } from "../Utils/Helpers";
+import { generateRSIHistoricalData } from "../Utils/technicalIndicators";
 
 const Container = styled.div`
-  b  // Cleanup on component unmount
-  useEffect(() => {
-    return () => {
-      if (chartRef.current) {
-        try {
-          // Check if chart has destroy method and is not already destroyed
-          if (chartRef.current.destroy && typeof chartRef.current.destroy === 'function') {
-            chartRef.current.destroy();
-          }
-        } catch (error) {
-          console.warn('Component unmount chart cleanup error:', error);
-        }
-        chartRef.current = null;
-      }
-    };
-  }, []);ba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   padding: 24px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -79,52 +64,50 @@ const PlaceholderText = styled.div`
   text-align: center;
 `;
 
-const ChartPortfolioValue = ({
+const Legend = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: #aaa;
+`;
+
+const LegendItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const LegendColor = styled.div`
+  width: 12px;
+  height: 2px;
+  background: ${(props) => props.color};
+`;
+
+const ChartRSI = ({
   coinz = {},
   marketData = {},
   currency = "USD",
   exchangeRate = 1,
 }) => {
-  const [activeTimeframe, setActiveTimeframe] = useState("7d");
+  const [activeTimeframe, setActiveTimeframe] = useState("30d");
   const chartRef = useRef(null);
 
-  const symbol = $currencySymbol(currency);
-
-  // Generate mock historical data for demonstration
-  const generateMockData = useCallback(
+  const generateRSIData = useCallback(
     (timeframe) => {
-      const now = Date.now();
-      const intervals = {
-        "24h": { points: 24, interval: 60 * 60 * 1000 }, // 1 hour intervals
-        "7d": { points: 168, interval: 60 * 60 * 1000 }, // 1 hour intervals
-        "30d": { points: 30, interval: 24 * 60 * 60 * 1000 }, // 1 day intervals
-        "3m": { points: 90, interval: 24 * 60 * 60 * 1000 }, // 1 day intervals
-        "1y": { points: 365, interval: 24 * 60 * 60 * 1000 }, // 1 day intervals
+      const days = {
+        "14d": 14,
+        "30d": 30,
+        "60d": 60,
+        "90d": 90,
       };
 
-      const { points, interval } = intervals[timeframe] || intervals["7d"];
-      const data = [];
-
-      // Calculate current portfolio value
-      const currentValue = Object.keys(coinz).reduce((total, coin) => {
-        const holding = Number(coinz[coin].hodl || 0);
-        const price =
-          (marketData[coin] &&
-            marketData[coin].ticker &&
-            Number(marketData[coin].ticker.price) * exchangeRate) ||
-          0;
-        return total + holding * price;
-      }, 0);
-
-      // Generate historical data with some variance
-      for (let i = points - 1; i >= 0; i--) {
-        const timestamp = now - i * interval;
-        const variance = (Math.random() - 0.5) * 0.1; // ±5% variance
-        const value = currentValue * (1 + variance * (i / points));
-        data.push([timestamp, Math.max(0, value)]);
-      }
-
-      return data;
+      return generateRSIHistoricalData(
+        coinz,
+        marketData,
+        exchangeRate,
+        days[timeframe] || 30
+      );
     },
     [coinz, marketData, exchangeRate]
   );
@@ -132,7 +115,7 @@ const ChartPortfolioValue = ({
   const chartOptions = useCallback(
     (data) => ({
       chart: {
-        type: "area",
+        type: "line",
         backgroundColor: "transparent",
         height: 300,
         spacing: [10, 10, 15, 10],
@@ -152,33 +135,64 @@ const ChartPortfolioValue = ({
       yAxis: {
         title: { text: null },
         gridLineColor: "#333",
+        min: 0,
+        max: 100,
         labels: {
           style: { color: "#aaa" },
-          formatter: function () {
-            return symbol + this.value.toFixed(0);
-          },
         },
+        plotBands: [
+          {
+            from: 70,
+            to: 100,
+            color: "rgba(255, 71, 87, 0.1)",
+            label: {
+              text: "Overbought",
+              style: { color: "#ff4757", fontSize: "10px" },
+            },
+          },
+          {
+            from: 0,
+            to: 30,
+            color: "rgba(33, 206, 153, 0.1)",
+            label: {
+              text: "Oversold",
+              style: { color: "#21ce99", fontSize: "10px" },
+            },
+          },
+        ],
+        plotLines: [
+          {
+            value: 70,
+            color: "#ff4757",
+            width: 1,
+            dashStyle: "Dash",
+          },
+          {
+            value: 50,
+            color: "#ffd93d",
+            width: 1,
+            dashStyle: "Dot",
+          },
+          {
+            value: 30,
+            color: "#21ce99",
+            width: 1,
+            dashStyle: "Dash",
+          },
+        ],
       },
       legend: {
         enabled: false,
       },
       plotOptions: {
-        area: {
-          fillColor: {
-            linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-            stops: [
-              [0, "rgba(33, 206, 153, 0.3)"],
-              [1, "rgba(33, 206, 153, 0.05)"],
-            ],
-          },
+        line: {
           marker: {
             enabled: false,
             states: {
-              hover: { enabled: true, radius: 5 },
+              hover: { enabled: true, radius: 4 },
             },
           },
           lineWidth: 2,
-          lineColor: "#21ce99",
           threshold: null,
         },
       },
@@ -188,31 +202,55 @@ const ChartPortfolioValue = ({
         style: { color: "#fff" },
         formatter: function () {
           const date = new Date(this.x);
-          return `<b>${symbol}${this.y.toFixed(
-            2
-          )}</b><br/>${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+          const rsiValue = this.y.toFixed(1);
+          let status = "Neutral";
+          let color = "#ffd93d";
+
+          if (rsiValue >= 70) {
+            status = "Overbought";
+            color = "#ff4757";
+          } else if (rsiValue <= 30) {
+            status = "Oversold";
+            color = "#21ce99";
+          }
+
+          return `<b style="color: ${color}">RSI: ${rsiValue}</b><br/>
+                  Status: ${status}<br/>
+                  ${date.toLocaleDateString()}`;
         },
       },
       series: [
         {
-          name: "Portfolio Value",
+          name: "RSI",
           data: data,
           color: "#21ce99",
+          zones: [
+            {
+              value: 30,
+              color: "#21ce99", // Oversold - green
+            },
+            {
+              value: 70,
+              color: "#ffd93d", // Neutral - yellow
+            },
+            {
+              color: "#ff4757", // Overbought - red
+            },
+          ],
         },
       ],
       credits: { enabled: false },
     }),
-    [symbol]
+    []
   );
 
   useEffect(() => {
     if (Object.keys(coinz).length > 0 && marketData) {
-      const data = generateMockData(activeTimeframe);
+      const data = generateRSIData(activeTimeframe);
 
       // Destroy existing chart if it exists
       if (chartRef.current) {
         try {
-          // Check if chart has destroy method and is not already destroyed
           if (
             chartRef.current.destroy &&
             typeof chartRef.current.destroy === "function"
@@ -220,25 +258,24 @@ const ChartPortfolioValue = ({
             chartRef.current.destroy();
           }
         } catch (error) {
-          console.warn("Chart destroy error:", error);
+          console.warn("RSI Chart destroy error:", error);
         }
         chartRef.current = null;
       }
 
-      // Check if container exists before creating chart
-      const container = document.getElementById("portfolio-chart");
-      if (container) {
+      // Check if container exists and data is available
+      const container = document.getElementById("rsi-chart");
+      if (container && data.length > 0) {
         try {
           const options = chartOptions(data);
-          // Add extra safety checks for Highcharts options
           if (options && typeof options === "object") {
-            const newChart = Highcharts.chart("portfolio-chart", options);
+            const newChart = Highcharts.chart("rsi-chart", options);
             if (newChart && newChart.destroy) {
               chartRef.current = newChart;
             }
           }
         } catch (error) {
-          console.warn("Chart creation error:", error);
+          console.warn("RSI Chart creation error:", error);
         }
       }
     }
@@ -248,7 +285,7 @@ const ChartPortfolioValue = ({
     marketData,
     currency,
     exchangeRate,
-    generateMockData,
+    generateRSIData,
     chartOptions,
   ]);
 
@@ -259,7 +296,7 @@ const ChartPortfolioValue = ({
         try {
           chartRef.current.destroy();
         } catch (error) {
-          console.warn("Component unmount chart cleanup error:", error);
+          console.warn("RSI Component unmount chart cleanup error:", error);
         }
         chartRef.current = null;
       }
@@ -267,21 +304,36 @@ const ChartPortfolioValue = ({
   }, []);
 
   const timeframes = [
-    { key: "24h", label: "24H" },
-    { key: "7d", label: "7D" },
+    { key: "14d", label: "14D" },
     { key: "30d", label: "30D" },
-    { key: "3m", label: "3M" },
-    { key: "1y", label: "1Y" },
+    { key: "60d", label: "60D" },
+    { key: "90d", label: "90D" },
   ];
 
   const hasData = Object.keys(coinz).length > 0;
+  const rsiData = hasData ? generateRSIData(activeTimeframe) : [];
 
   return (
     <Container>
       <Title>
-        <i className="fa fa-chart-area" aria-hidden="true"></i>
-        Portfolio Value Over Time
+        <i className="fa fa-line-chart" aria-hidden="true"></i>
+        RSI (Relative Strength Index)
       </Title>
+
+      <Legend>
+        <LegendItem>
+          <LegendColor color="#21ce99" />
+          <span>Oversold (&lt; 30)</span>
+        </LegendItem>
+        <LegendItem>
+          <LegendColor color="#ffd93d" />
+          <span>Neutral (30-70)</span>
+        </LegendItem>
+        <LegendItem>
+          <LegendColor color="#ff4757" />
+          <span>Overbought (&gt; 70)</span>
+        </LegendItem>
+      </Legend>
 
       <TimeframeTabs>
         {timeframes.map(({ key, label }) => (
@@ -296,11 +348,13 @@ const ChartPortfolioValue = ({
       </TimeframeTabs>
 
       <ChartContainer>
-        {hasData ? (
-          <div id="portfolio-chart" style={{ height: "100%", width: "100%" }} />
+        {hasData && rsiData.length > 0 ? (
+          <div id="rsi-chart" style={{ height: "100%", width: "100%" }} />
         ) : (
           <PlaceholderText>
-            Add coins to your portfolio to see performance charts
+            {hasData
+              ? "Insufficient data for RSI calculation (need 15+ days)"
+              : "Add coins to your portfolio to see RSI analysis"}
           </PlaceholderText>
         )}
       </ChartContainer>
@@ -308,4 +362,4 @@ const ChartPortfolioValue = ({
   );
 };
 
-export default ChartPortfolioValue;
+export default ChartRSI;

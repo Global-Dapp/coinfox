@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import styled from 'styled-components';
+import React, { useState, useRef, useEffect } from "react";
+import styled from "styled-components";
 
 const ActionsContainer = styled.div`
   position: relative;
@@ -14,7 +14,7 @@ const ActionsButton = styled.button`
   padding: 8px;
   border-radius: 4px;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: #404042;
     color: white;
@@ -46,11 +46,11 @@ const MenuItem = styled.button`
   display: flex;
   align-items: center;
   gap: 8px;
-  
+
   &:hover {
     background: #505052;
   }
-  
+
   &:not(:last-child) {
     border-bottom: 1px solid #555;
   }
@@ -62,7 +62,14 @@ const MenuIcon = styled.span`
   text-align: center;
 `;
 
-const QuickActions = ({ coin, onEdit, onRemove, onToggleFavorite, isFavorite, onViewDetails }) => {
+const QuickActions = ({
+  coin,
+  onEdit,
+  onRemove,
+  onToggleFavorite,
+  isFavorite,
+  onViewDetails,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -70,11 +77,11 @@ const QuickActions = ({ coin, onEdit, onRemove, onToggleFavorite, isFavorite, on
     const handleClickOutside = (event) => {
       // Only close if menu is open and click is outside
       if (!isOpen) return;
-      
+
       // Check if the click target is within our menu container
       const target = event.target;
       let isClickInside = false;
-      
+
       try {
         if (menuRef.current) {
           // Use a more robust method to check if element contains target
@@ -85,27 +92,31 @@ const QuickActions = ({ coin, onEdit, onRemove, onToggleFavorite, isFavorite, on
           isClickInside = element === menuRef.current;
         }
       } catch (error) {
-        console.warn('Error checking click outside:', error);
+        console.warn("Error checking click outside:", error);
         isClickInside = false;
       }
-      
+
       if (!isClickInside) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
 
-  const toggleMenu = () => {
+  const toggleMenu = (e) => {
+    e.stopPropagation();
     setIsOpen(!isOpen);
   };
 
-  const handleAction = (action) => {
+  const handleAction = (action, e) => {
+    console.log("QuickActions handleAction called");
+    if (e) e.stopPropagation();
     setIsOpen(false);
+    console.log("About to call action:", action);
     action();
   };
 
@@ -114,25 +125,27 @@ const QuickActions = ({ coin, onEdit, onRemove, onToggleFavorite, isFavorite, on
       <ActionsButton onClick={toggleMenu}>
         <i className="fa fa-ellipsis-v" aria-hidden="true"></i>
       </ActionsButton>
-      
+
       {isOpen && (
-        <ActionsMenu>
-          <MenuItem onClick={() => handleAction(() => onViewDetails(coin))}>
+        <ActionsMenu onClick={(e) => e.stopPropagation()}>
+          <MenuItem onClick={(e) => handleAction(() => onViewDetails(coin), e)}>
             <MenuIcon>👁️</MenuIcon>
             View Details
           </MenuItem>
-          
-          <MenuItem onClick={() => handleAction(() => onEdit(coin))}>
+
+          <MenuItem onClick={(e) => handleAction(() => onEdit(coin), e)}>
             <MenuIcon>✏️</MenuIcon>
             Edit Holdings
           </MenuItem>
-          
-          <MenuItem onClick={() => handleAction(() => onToggleFavorite(coin))}>
-            <MenuIcon>{isFavorite ? '💔' : '❤️'}</MenuIcon>
-            {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+
+          <MenuItem
+            onClick={(e) => handleAction(() => onToggleFavorite(), e)}
+          >
+            <MenuIcon>{isFavorite ? "💔" : "❤️"}</MenuIcon>
+            {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
           </MenuItem>
-          
-          <MenuItem onClick={() => handleAction(() => onRemove(coin))}>
+
+          <MenuItem onClick={(e) => handleAction(() => onRemove(coin), e)}>
             <MenuIcon>🗑️</MenuIcon>
             Remove from Portfolio
           </MenuItem>
