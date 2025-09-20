@@ -128,12 +128,17 @@ class CoinList extends Component {
   }
 
   toggleFavorite = (coin) => {
+    console.log("toggleFavorite called for coin:", coin);
     const { favorites } = this.state;
+    console.log("Current favorites:", favorites);
     const isCurrentlyFavorite = favorites.includes(coin);
+    console.log("Is currently favorite:", isCurrentlyFavorite);
+    
     const newFavorites = isCurrentlyFavorite
       ? favorites.filter((f) => f !== coin)
       : [...favorites, coin];
 
+    console.log("New favorites:", newFavorites);
     this.setState({ favorites: newFavorites });
     localStorage.setItem("coinFavorites", JSON.stringify(newFavorites));
 
@@ -151,9 +156,20 @@ class CoinList extends Component {
   };
 
   handleRemove = (coin) => {
-    if (window.confirm(`Remove ${coin.toUpperCase()} from your portfolio?`)) {
-      // Call remove function from parent
-      console.log("Remove coin:", coin);
+    console.log("handleRemove called for coin:", coin);
+    console.log("deleteCoin prop:", this.props.deleteCoin);
+    console.log("history prop:", this.props.history);
+    
+    if (this.props.deleteCoin) {
+      // Call the deleteCoin function from parent (App.js) with history
+      this.props.deleteCoin(coin, this.props.history);
+    } else {
+      // Fallback if deleteCoin is not available
+      if (window.confirm(`Remove ${coin.toUpperCase()} from your portfolio?`)) {
+        console.log("Remove coin:", coin);
+        // You could also add a notification here
+        showNotification("error", "Delete function not available");
+      }
     }
   };
 

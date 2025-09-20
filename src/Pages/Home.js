@@ -1,11 +1,9 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
-import { isUserSignedIn } from "blockstack";
 
 import Pie from "./Pie";
 import TotalPortfolio from "../Components/TotalPortfolio";
 import PortfolioSummary from "../Components/PortfolioSummary";
-import AlertNotification from "../Components/AlertNotification";
 import AlertsList from "../Components/AlertsList";
 import SearchFilter from "../Components/SearchFilter";
 import CoinList from "../Components/CoinList";
@@ -60,7 +58,6 @@ class Home extends Component {
             <Link className="menu" key="Menu" to="/menu">
               <i className="btn-menu fa fa-lg fa-bars" aria-hidden="true"></i>
             </Link>
-            <AlertNotification />
             <TotalPortfolio
               totalPortfolio={this.props.totalPortfolio}
               currency={this.props.currency}
@@ -78,6 +75,32 @@ class Home extends Component {
             currency={this.props.currency}
             exchangeRate={this.props.exchangeRate}
           />
+
+          <div
+            className="analyticsLink"
+            style={{
+              padding: "10px 20px",
+              textAlign: "center",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            <Link
+              to="/analytics"
+              style={{
+                color: "#21ce99",
+                textDecoration: "none",
+                fontSize: "16px",
+                fontWeight: "600",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+              }}
+            >
+              <i className="fa fa-chart-line" aria-hidden="true"></i>
+              View Portfolio Analytics
+            </Link>
+          </div>
 
           <SearchFilter
             onSearch={this.handleSearch}
@@ -115,6 +138,7 @@ class Home extends Component {
               searchTerm={this.state.searchTerm}
               activeFilter={this.state.activeFilter}
               sortBy={this.state.sortBy}
+              deleteCoin={this.props.deleteCoin}
               key={"CoinList"}
             />
           )}

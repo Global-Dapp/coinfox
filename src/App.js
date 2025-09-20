@@ -418,7 +418,7 @@ class App extends Component {
 
   redirectToHttps = () => {
     const userHasCoins = Boolean(localStorage.coinz);
-    const https = window.location.protocol == "https:";
+    const https = window.location.protocol === "https:";
     // no coins, http visitor, redirect to https
     if (localStorage.https === "true" || (!userHasCoins && !https)) {
       window.location.protocol = "https:";
@@ -442,7 +442,7 @@ class App extends Component {
     if (searchParams.has("import")) {
       const importPortfolio = JSON.parse(atob(searchParams.get("import")));
       const alreadyImported =
-        searchParams.get("import") == localStorage.getItem("lastImport");
+        searchParams.get("import") === localStorage.getItem("lastImport");
 
       if (alreadyImported) {
         console.log("already imported this portfolio");
@@ -461,7 +461,7 @@ class App extends Component {
     }
 
     // @TODO find out why isUserSignedIn re:true, even if blockstack isnt running
-    if (isUserSignedIn() && window.location.pathname == "/blockstack") {
+    if (isUserSignedIn() && window.location.pathname === "/blockstack") {
       // @TODO make this a function that returns a promise
       const decrypt = true;
       getFile(this.state.gaiaStorage, decrypt)
@@ -632,7 +632,10 @@ class App extends Component {
       } else {
         // delete from localStorage
         localStorage.setItem("coinz", JSON.stringify(current));
-        // go back home
+        // update state to trigger re-render
+        this.setState({
+          coinz: current,
+        });
       }
 
       // then go back
@@ -671,6 +674,7 @@ class App extends Component {
                   }
                   addCoinz={this.addCoinz}
                   saveNewPref={this.saveNewPref}
+                  deleteCoin={this.deleteCoin}
                 />
               )}
             />

@@ -113,8 +113,10 @@ const QuickActions = ({
   };
 
   const handleAction = (action, e) => {
+    console.log("QuickActions handleAction called");
     if (e) e.stopPropagation();
     setIsOpen(false);
+    console.log("About to call action:", action);
     action();
   };
 
@@ -137,7 +139,7 @@ const QuickActions = ({
           </MenuItem>
 
           <MenuItem
-            onClick={(e) => handleAction(() => onToggleFavorite(coin), e)}
+            onClick={(e) => handleAction(() => onToggleFavorite(), e)}
           >
             <MenuIcon>{isFavorite ? "💔" : "❤️"}</MenuIcon>
             {isFavorite ? "Remove from Favorites" : "Add to Favorites"}

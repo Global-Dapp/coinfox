@@ -114,7 +114,16 @@ class Chart extends Component {
 
   //Destroy chart before unmount.
   componentWillUnmount() {
-    this.chart && this.chart.destroy();
+    if (this.chart) {
+      try {
+        // Check if chart has destroy method and is not already destroyed
+        if (this.chart.destroy && typeof this.chart.destroy === "function") {
+          this.chart.destroy();
+        }
+      } catch (error) {
+        console.warn("Chart destroy error:", error);
+      }
+    }
   }
 
   _fetchChartData(coin, exchangeRate, timeRange = "1D") {

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
+import React, { useState } from "react";
+import styled from "styled-components";
 
 const SearchFilterContainer = styled.div`
   margin: 20px;
@@ -7,6 +7,8 @@ const SearchFilterContainer = styled.div`
   background: #303032;
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  box-sizing: border-box;
 `;
 
 const SearchInput = styled.input`
@@ -18,11 +20,12 @@ const SearchInput = styled.input`
   background: #404042;
   color: white;
   font-size: 16px;
-  
+  box-sizing: border-box;
+
   &::placeholder {
     color: #aaa;
   }
-  
+
   &:focus {
     outline: none;
     border-color: #21ce99;
@@ -35,20 +38,32 @@ const FilterContainer = styled.div`
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 16px;
+  overflow-x: auto;
+
+  /* Hide scrollbar but allow scrolling on mobile */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const FilterButton = styled.button`
   padding: 8px 16px;
   border: 1px solid #555;
   border-radius: 20px;
-  background: ${props => props.active ? '#21ce99' : 'transparent'};
-  color: ${props => props.active ? 'white' : '#aaa'};
+  background: ${(props) => (props.active ? "#21ce99" : "transparent")};
+  color: ${(props) => (props.active ? "white" : "#aaa")};
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 14px;
-  
+  box-sizing: border-box;
+  flex-shrink: 0;
+
   &:hover {
-    background: ${props => props.active ? '#21ce99' : '#404042'};
+    background: ${(props) => (props.active ? "#21ce99" : "#404042")};
     border-color: #21ce99;
   }
 `;
@@ -57,6 +72,7 @@ const SortContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 `;
 
 const SortLabel = styled.span`
@@ -71,17 +87,28 @@ const SortSelect = styled.select`
   background: #404042;
   color: white;
   cursor: pointer;
-  
+  box-sizing: border-box;
+  min-width: 150px;
+
   &:focus {
     outline: none;
     border-color: #21ce99;
   }
 `;
 
-const SearchFilter = ({ onSearch, onFilter, onSort, searchTerm, activeFilter, sortBy }) => {
-  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm || '');
-  const [localActiveFilter, setLocalActiveFilter] = useState(activeFilter || 'all');
-  const [localSortBy, setLocalSortBy] = useState(sortBy || 'value');
+const SearchFilter = ({
+  onSearch,
+  onFilter,
+  onSort,
+  searchTerm,
+  activeFilter,
+  sortBy,
+}) => {
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm || "");
+  const [localActiveFilter, setLocalActiveFilter] = useState(
+    activeFilter || "all"
+  );
+  const [localSortBy, setLocalSortBy] = useState(sortBy || "value");
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -108,34 +135,34 @@ const SearchFilter = ({ onSearch, onFilter, onSort, searchTerm, activeFilter, so
         value={localSearchTerm}
         onChange={handleSearchChange}
       />
-      
+
       <FilterContainer>
         <FilterButton
-          active={localActiveFilter === 'all'}
-          onClick={() => handleFilterChange('all')}
+          active={localActiveFilter === "all"}
+          onClick={() => handleFilterChange("all")}
         >
           All Coins
         </FilterButton>
         <FilterButton
-          active={localActiveFilter === 'gaining'}
-          onClick={() => handleFilterChange('gaining')}
+          active={localActiveFilter === "gaining"}
+          onClick={() => handleFilterChange("gaining")}
         >
           Gaining
         </FilterButton>
         <FilterButton
-          active={localActiveFilter === 'losing'}
-          onClick={() => handleFilterChange('losing')}
+          active={localActiveFilter === "losing"}
+          onClick={() => handleFilterChange("losing")}
         >
           Losing
         </FilterButton>
         <FilterButton
-          active={localActiveFilter === 'favorites'}
-          onClick={() => handleFilterChange('favorites')}
+          active={localActiveFilter === "favorites"}
+          onClick={() => handleFilterChange("favorites")}
         >
           Favorites
         </FilterButton>
       </FilterContainer>
-      
+
       <SortContainer>
         <SortLabel>Sort by:</SortLabel>
         <SortSelect value={localSortBy} onChange={handleSortChange}>
@@ -150,4 +177,3 @@ const SearchFilter = ({ onSearch, onFilter, onSort, searchTerm, activeFilter, so
 };
 
 export default SearchFilter;
-
